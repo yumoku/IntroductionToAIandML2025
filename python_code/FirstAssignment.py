@@ -1,8 +1,11 @@
 from huggingface_hub import login
+import os
+from dotenv import load_dotenv
 import torch
 from torch.cuda import device
+load_dotenv()
 
-login(token="", new_session=False) #你自己執行時請把這行改成 login(token="YOUR Hugging Face Token", new_session=False)
+login(token=os.getenv("HAPPY_FACE_KEY"), new_session=False) #你自己執行時請把這行改成 login(token="YOUR Hugging Face Token", new_session=False)
 # device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
