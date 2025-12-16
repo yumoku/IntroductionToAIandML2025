@@ -1,9 +1,12 @@
 from huggingface_hub import login
 import os
 from dotenv import load_dotenv
+from pathlib import Path
+
 import torch
 from torch.cuda import device
-load_dotenv()
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(env_path)
 
 login(token=os.getenv("HAPPY_FACE_KEY"), new_session=False) #你自己執行時請把這行改成 login(token="YOUR Hugging Face Token", new_session=False)
 # device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
@@ -21,7 +24,7 @@ model_id = "google/gemma-3-1b-it"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id)
 
-# print("語言模型有多少不同的 Token 可以選擇：", tokenizer.vocab_size)
+print("語言模型有多少不同的 Token 可以選擇：", tokenizer.vocab_size)
 #
 # #使用 tokenizer.decode 這個函式將編號轉回對應的文字
 #
@@ -50,32 +53,17 @@ model = AutoModelForCausalLM.from_pretrained(model_id)
 #     tokens_with_length.append((token_id, token, len(token))) #len(token) 為 token 的長度
 #
 # # 根據 token 的長度從長到短排序
-# tokens_with_length.sort(key=lambda x: x[2], reverse=False) #把 reverse=True 改成 reverse=False 就可以由短排到長
+# tokens_with_length.sort(key=lambda x: x[2], reverse=True) #把 reverse=True 改成 reverse=False 就可以由短排到長
 #
 # # 印出前 k 筆排序後的結果
 # k = 100
 # for t in range(k):
 #     token_id, token_str, token_length = tokens_with_length[t]
 #     print("Token 編號 ", token_id, " (長度: ", token_length, ")", tokenizer.decode(token_id))
-#
-# # 為了展示 token 中真的甚麼怪東西都有，我們來找出最長的 token
-# # 這裡我們把 token 依照長度由長排到短
-#
-# tokens_with_length = [] #存每個 token 的 ID、對應字串與其長度
-#
-# # 將每個 token 的 ID、對應字串與其長度加入 tokens_with_length
-# for token_id in range(tokenizer.vocab_size): #窮舉所有 token id
-#     token = tokenizer.decode(token_id) #根據 token_id 找出對應的 token
-#     tokens_with_length.append((token_id, token, len(token))) #len(token) 為 token 的長度
-#
-# # 根據 token 的長度從長到短排序
-# tokens_with_length.sort(key=lambda x: x[2], reverse=False) #把 reverse=True 改成 reverse=False 就可以由短排到長
-#
-# # 印出前 k 筆排序後的結果
-# k = 100
-# for t in range(k):
-#     token_id, token_str, token_length = tokens_with_length[t]
-#     print("Token 編號 ", token_id, " (長度: ", token_length, ")", tokenizer.decode(token_id))
+
+# 為了展示 token 中真的甚麼怪東西都有，我們來找出最長的 token
+# 這裡我們把 token 依照長度由長排到短
+
 
 ## 用 tokenizer.encode 把文字變成一串 token 編號
 
@@ -106,16 +94,16 @@ model = AutoModelForCausalLM.from_pretrained(model_id)
 
 import torch #接下來需要用到 torch 這個套件
 
-prompt = "1+1=" #試試看: "在二進位中，1+1="、"你是誰?"
-print("輸入的 prompt 是:", prompt)
+# prompt = "1+1=" #試試看: "在二進位中，1+1="、"你是誰?"
+# print("輸入的 prompt 是:", prompt)
 
 # model 不能直接輸入文字，model 只能輸入以 PyTorch tensor 格式儲存的 token IDs
 # 把要輸入 prompt 轉成 model 可以處理的格式
-input_ids = tokenizer.encode(prompt, return_tensors="pt") # return_tensors="pt" 表示回傳 PyTorch tensor 格式
-print("這是 model 可以讀的輸入：",input_ids)
+# input_ids = tokenizer.encode(prompt, return_tensors="pt") # return_tensors="pt" 表示回傳 PyTorch tensor 格式
+# print("這是 model 可以讀的輸入：",input_ids)
 
 # model 以 input_ids (根據 prompt 產生) 作為輸入，產生 outputs，
-outputs = model(input_ids)
+# outputs = model(input_ids)
 # outputs 裡面包含了大量的資訊
 # 我們在往後的課程還會看到 outputs 中還有甚麼
 # 在這裡我們只需要 "根據輸入的 prompt ，下一個 token 的機率分布" (也就是每一個 token 接在 prompt 之後的機率)
@@ -561,31 +549,31 @@ outputs = model(input_ids)
 # 用 pipeline 來做文字接龍
 # 其實使用 Hugging Face 上模型最簡單的方式是透過 pipeline，這樣可以省略將文字轉成 token ID 再轉回來的過程。
 
-from transformers import pipeline
+# from transformers import pipeline
+#
+# # 建立一個pipeline，設定要使用的模型
+# emodel_id = "meta-llama/Llama-3.2-3B-Instruct"
+# #model_id = "google/gemma-3-4b-it"
+# pipe = pipeline(
+#     "text-generation",
+#    model_id
+# )
+#
+# messages = [{"role": "system", "content": "你是 LLaMA，你都用中文回答我，開頭都說哈哈哈"}]
+#
+# while True:
+#     # 1️⃣ 使用者輸入訊息
+#     user_prompt = input("😊 你說： ")
+#
+#     # 如果輸入 "exit" 就跳出聊天
+#     if user_prompt.lower() == "exit":
+#         #print("聊天結束啦，下次再聊喔！👋")
+#         break
+#
+#     # 將使用者訊息加進對話紀錄
+#     messages.append({"role": "user", "content": user_prompt})
 
-# 建立一個pipeline，設定要使用的模型
-emodel_id = "meta-llama/Llama-3.2-3B-Instruct"
-#model_id = "google/gemma-3-4b-it"
-pipe = pipeline(
-    "text-generation",
-   model_id
-)
-
-messages = [{"role": "system", "content": "你是 LLaMA，你都用中文回答我，開頭都說哈哈哈"}]
-
-while True:
-    # 1️⃣ 使用者輸入訊息
-    user_prompt = input("😊 你說： ")
-
-    # 如果輸入 "exit" 就跳出聊天
-    if user_prompt.lower() == "exit":
-        #print("聊天結束啦，下次再聊喔！👋")
-        break
-
-    # 將使用者訊息加進對話紀錄
-    messages.append({"role": "user", "content": user_prompt})
-
-    '''
+'''
     # 2️⃣ 將歷史訊息轉換為模型可以理解的格式
     # add_generation_prompt=True 會在訊息後面加入一個特殊標記 (<|assistant|>)，
     # 告訴模型現在輪到它講話了！
@@ -616,16 +604,16 @@ while True:
 
     ### 上述註解中的程式碼所做的事情，可以僅用以下幾行程式碼完成。
     #=============================
-    outputs = pipe(  # 呼叫模型生成回應
-      messages,
-      max_new_tokens=2000,
-      pad_token_id=pipe.tokenizer.eos_token_id
-    )
-    response = outputs[0]["generated_text"][-1]['content'] # 從輸出內容取出模型生成的回應
-    #=============================
-
-    # 4️⃣ 顯示模型的回覆
-    print("🤖 助理說：", response)
-
-    # 將模型回覆加進對話紀錄，讓下次模型知道之前的對話內容
-    messages.append({"role": "assistant", "content": response})
+    # outputs = pipe(  # 呼叫模型生成回應
+    #   messages,
+    #   max_new_tokens=2000,
+    #   pad_token_id=pipe.tokenizer.eos_token_id
+    # )
+    # response = outputs[0]["generated_text"][-1]['content'] # 從輸出內容取出模型生成的回應
+    # #=============================
+    #
+    # # 4️⃣ 顯示模型的回覆
+    # print("🤖 助理說：", response)
+    #
+    # # 將模型回覆加進對話紀錄，讓下次模型知道之前的對話內容
+    # messages.append({"role": "assistant", "content": response})
